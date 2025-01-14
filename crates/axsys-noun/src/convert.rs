@@ -50,14 +50,14 @@ impl Display for Error {
 ///   The resulting [`Vec`] does not include the null terminator.
 ///
 /// ```
-/// # use noun::{convert, noun::Noun};
+/// # use axsys_noun::{convert, noun::Noun};
 /// let noun = Noun::null();
 /// let vec = convert!(&noun => Vec<String>).unwrap();
 /// assert!(vec.is_empty());
 /// ```
 ///
 /// ```
-/// # use noun::{atom::Atom, cell::Cell, convert, noun::Noun};
+/// # use axsys_noun::{atom::Atom, cell::Cell, convert, noun::Noun};
 /// let noun = Noun::from(Cell::from([
 ///     Atom::from("hello"),
 ///     Atom::from("world"),
@@ -76,14 +76,14 @@ impl Display for Error {
 ///   The resulting [`HashMap`] does not include the null terminator.
 ///
 /// ```
-/// # use noun::{cell::Cell, convert, noun::Noun};
+/// # use axsys_noun::{cell::Cell, convert, noun::Noun};
 /// let noun = Noun::null();
 /// let map = convert!(&noun => HashMap<&str, &str>).unwrap();
 /// assert_eq!(map.len(), 0);
 /// ```
 ///
 /// ```
-/// # use noun::{cell::Cell, convert, noun::Noun};
+/// # use axsys_noun::{cell::Cell, convert, noun::Noun};
 /// let noun = Noun::from(Cell::from([
 ///     Noun::from(Cell::from(["Ruth", "Babe"])),
 ///     Noun::from(Cell::from(["Williams", "Ted"])),
@@ -107,14 +107,14 @@ impl Display for Error {
 ///   [`Noun`] must implement [`TryFrom`]`<T>`.
 ///
 /// ```
-/// # use noun::{atom::Atom, cell::Cell, convert, noun::Noun};
+/// # use axsys_noun::{atom::Atom, cell::Cell, convert, noun::Noun};
 /// let strings = [];
 /// let noun = convert!(strings.iter() => Noun).unwrap();
 /// assert!(noun.is_null());
 /// ```
 ///
 /// ```
-/// # use noun::{atom::Atom, cell::Cell, convert, noun::Noun};
+/// # use axsys_noun::{atom::Atom, cell::Cell, convert, noun::Noun};
 /// let strings = vec![
 ///     String::from("1"),
 ///     String::from("2"),

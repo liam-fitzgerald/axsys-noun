@@ -42,7 +42,25 @@ impl Noun {
             Self::Cell(cell) => cell.hash(),
         }
     }
+
+    pub fn as_cell(&self) -> Option<&Cell> {
+        if let Noun::Cell(cell) = self {
+            Some(cell)
+        } else {
+            None
+        }
+    }
+
+    pub fn as_atom(&self) -> Option<&Atom> {
+        if let Noun::Atom(atom) = self {
+            Some(atom)
+        } else {
+            None
+        }
+    }
 }
+
+
 
 impl Cue for Noun {
     fn cue(jammed_noun: Atom) -> serdes::Result<Self> {

@@ -11,3 +11,6 @@ thread-safe = []
 
 [lib]
 crate-type = ["lib", "staticlib"]
+
+[dependencies]
+ibig = "0.3.6"

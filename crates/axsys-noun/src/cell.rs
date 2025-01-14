@@ -6,6 +6,43 @@ use std::{
     mem::MaybeUninit,
 };
 
+mod axes {
+    pub fn cap(axis: usize) -> usize {
+        match axis {
+            0 => panic!("axis 0 is invalid"),
+            1 => panic!("axis 1 is invalid"),
+            2 => 2,
+            3 => 3,
+            _ => cap(axis / 2),
+        }
+    }
+
+    pub fn mas(axis: usize) -> usize {
+        match axis {
+            0 | 1 => panic!("axis 0 or 1 is invalid"),
+            2 | 3 => 1,
+            _ => {
+                let recur = mas(axis / 2);
+                (axis % 2) + (recur * 2)
+            }
+        }
+    }
+    pub fn peg(a: usize, b: usize) -> usize {
+        if a == 0 || b == 0 {
+            panic!("axis 0 is invalid");
+        }
+        match b {
+            1 => a,
+            2 => 2 * a,
+            3 => 2 * a + 1,
+            _ => {
+                let recur = peg(a, b / 2);
+                return (b % 2) + (recur * 2);
+            }
+        }
+    }
+}
+
 /// A pair of reference-counted nouns.
 ///
 /// A cell can be:
@@ -21,14 +58,14 @@ use std::{
 /// To create a new cell, use one of the `From<[T; N]>` implementations:
 ///
 /// ```
-/// # use noun::{atom::Atom, cell::Cell, Noun, cell};
+/// # use axsys_noun::{atom::Atom, cell::Cell, Noun, cell};
 /// let cell = Cell::from(["hello", "world"]);
 /// assert_eq!(*cell.head(), Noun::from(Atom::from("hello")));
 /// assert_eq!(*cell.tail(), Noun::from(Atom::from("world")));
 /// ```
 ///
 /// ```
-/// # use noun::{atom::Atom, cell::Cell, Noun, cell};
+/// # use axsys_noun::{atom::Atom, cell::Cell, Noun, cell};
 /// let cell = Cell::from([0u8, 2u8, 4u8, 8u8]);
 /// assert_eq!(*cell.head(), Noun::from(Atom::from(0u8)));
 /// assert_eq!(*cell.tail(), Noun::from(Cell::from([2u8, 4u8, 8u8])));
@@ -79,7 +116,7 @@ impl Cell {
     /// # Examples
     ///
     /// ```
-    /// # use noun::{atom::Atom, cell::Cell, Noun, cell};
+    /// # use axsys_noun::{atom::Atom, cell::Cell, Noun, cell};
     /// let cell = Cell::from([0u8, 1u8, 2u8, 3u8, 4u8, 5u8]);
     ///
     /// let nouns = cell.to_array::<6>().unwrap();
@@ -92,7 +129,7 @@ impl Cell {
     /// ```
     ///
     /// ```
-    /// # use noun::{atom::Atom, cell::Cell, cell};
+    /// # use axsys_noun::{atom::Atom, cell::Cell, cell};
     /// let cell = Cell::from([0u8, 1u8, 2u8, 3u8]);
     ///
     /// assert_eq!(cell.to_array::<6>(), None);
@@ -126,7 +163,7 @@ impl Cell {
     /// # Examples
     ///
     /// ```
-    /// # use noun::{atom::Atom, cell::Cell, Noun, cell};
+    /// # use axsys_noun::{atom::Atom, cell::Cell, Noun, cell};
     /// let cell = Cell::from([0u8, 1u8, 2u8, 4u8, 8u8, 16u8, 32u8, 64u8, 128u8]);
     ///
     /// let nouns = cell.to_vec();
@@ -157,6 +194,59 @@ impl Cell {
     /// Converts this cell into its head and tail, consuming the cell.
     pub fn into_parts(self) -> (Rc<Noun>, Rc<Noun>) {
         (self.head, self.tail)
+    }
+
+    pub fn as_noun(&self) -> Noun {
+        Noun::Cell(self.clone())
+    }
+
+    pub fn in_rc(&self) -> Rc<Noun> {
+        Rc::new(self.as_noun())
+    }
+    /// Returns the noun at the given axis, or None if the axis is invalid.
+    ///
+    /// # Examples
+    /// ```
+    /// use axsys_noun::{atom::Atom, cell::Cell, Noun, cell};
+    /// let cell = Cell::from([0u8, 1u8, 2u8]);
+    ///
+    /// assert_eq!(cell.slot(0), None);
+    /// assert_eq!(cell.slot(1), Some(cell.in_rc()));
+    /// assert_eq!(cell.slot(2), Some(cell.head()));
+    /// assert_eq!(cell.slot(3), Some(cell.tail()));
+    /// assert_eq!(cell.slot(6), Some(cell.tail().as_cell().unwrap().head()));
+    /// assert_eq!(cell.slot(7), Some(cell.tail().as_cell().unwrap().tail()));
+    /// ```
+    pub fn slot(&self, axis: usize) -> Option<Rc<Noun>> {
+        match axis {
+            0 => None,
+            1 => Some(Rc::new(self.to_owned().as_noun())),
+            _ => {
+                let nex = axes::cap(axis);
+                let mas = axes::mas(axis);
+                println!("nex: {}", nex);
+                println!("mas: {}", mas);
+                match nex {
+                    2 => {
+                        let res = self.head();
+                        if mas == 1 {
+                            Some(res)
+                        } else {
+                            res.as_cell().and_then(|c| c.slot(mas))
+                        }
+                    }
+                    3 => {
+                        let res = self.tail();
+                        if mas == 1 {
+                            Some(res)
+                        } else {
+                            res.as_cell().and_then(|c| c.slot(mas))
+                        }
+                    }
+                    _ => panic!("axis {} is invalid", axis),
+                }
+            }
+        }
     }
 }
 
