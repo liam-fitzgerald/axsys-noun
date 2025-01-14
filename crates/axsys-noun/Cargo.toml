@@ -1,0 +1,13 @@
+[package]
+name = "axsys_noun"
+version = "0.1.0"
+edition = "2021"
+authors = ["Peter McEvoy <peter@tlon.io>", "Liam Fitzgerald <liam@axiomatic.systems>"]
+description = "A library for working with Noun data"
+
+[features]
+default = []
+thread-safe = []
+
+[lib]
+crate-type = ["lib", "staticlib"]
