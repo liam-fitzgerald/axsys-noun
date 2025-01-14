@@ -292,9 +292,13 @@ mod parse {
         let (i, _) = multispace1(i)?;
         println!("parsed core {:#?}", i);
         let (i, arms) = most(multispace1, arm)(i)?;
+        println!("parsed arms {:#?}, rest: {:#?}", arms, i);
         let (i, _) = multispace0(i)?;
+        println!("parsed rest {:#?}", i);
         let (i, _) = tag("--")(i)?;
+        println!("parsed rest {:#?}", i);
         let (i, _) = multispace0(i)?;
+        println!("parsed last {:#?}", i);
         Ok((
             i,
             Box::new(HoonType::Core(CoreType {
@@ -627,12 +631,13 @@ pub fn sanitize_type(input: String) -> String {
 }
 
 pub fn define_type(input: String) -> TokenStream {
-    let one = parse::core(&input);
-    if one.is_err() {
-        println!("{}", one.unwrap_err());
+    let res = parse::core(&input);
+    if res.is_err() {
+        println!("{:#?}", res.unwrap_err());
         panic!("Failed to parse core type");
     }
-    let (_input, ty) = one.unwrap();
+
+    let (_, ty) = res.unwrap();
     let arms = match ty.as_ref() {
         HoonType::Core(core) => core.core.clone(),
         _ => panic!("Expected a core type"),
@@ -714,4 +719,60 @@ pub fn sloe(ty: &HoonType) -> Vec<(String, usize)> {
         return false;
     });
     res
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_define_type() {
+        let s = r#"
+|%
+++  foo  [one=@ two=@ux]
+++  bar  [three=@ four=@]
+--
+"#;
+        let expanded = define_type(String::from(s));
+        println!("{}", expanded);
+        let expected = quote! {
+            #[derive(Debug)]
+            struct Foo {
+                pub two: Atom,
+                pub one: Atom
+            }
+
+            impl Foo {
+                fn new(input: Rc<Noun>) -> Self {
+                    let input = input.as_cell().unwrap();
+                    Self {
+                        two: input.get_axis(3usize).unwrap(),
+                        one: input.get_axis(2usize).unwrap()
+                    }
+                }
+            }
+
+            #[derive(Debug)]
+            struct Bar {
+                pub four: Atom,
+                pub three: Atom
+            }
+
+            impl Bar {
+                fn new(input: Rc<Noun>) -> Self {
+                    let input = input.as_cell().unwrap();
+                    Self {
+                        four: input.get_axis(3usize).unwrap(),
+                        three: input.get_axis(2usize).unwrap()
+                    }
+                }
+            }
+        };
+
+        
+        let expanded_str = prettyplease::unparse(&syn::parse2(expanded.clone()).unwrap());
+        let expected_str = prettyplease::unparse(&syn::parse2(expected).unwrap());
+        
+        assert_eq!(expanded_str, expected_str);
+    }
 }
