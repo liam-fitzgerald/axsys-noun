@@ -21,6 +21,8 @@ pub mod marker;
 pub mod noun;
 pub mod serdes;
 
+pub mod sept;
+
 #[doc(inline)]
 pub use crate::atom::{Atom, Builder as AtomBuilder, Iter as AtomIter};
 #[doc(inline)]

@@ -1,12 +1,19 @@
-[package]
-name = "noun"
+[workspace]
+resolver = "2"
+members = [
+  "crates/axsys-noun",
+]
+
+
+[workspace.package]
 version = "0.1.0"
 edition = "2021"
-authors = ["Peter McEvoy <peter@tlon.io>"]
 
-[features]
-default = []
-thread-safe = []
+[workspace.dependencies]
 
-[lib]
-crate-type = ["lib", "staticlib"]
+[profile.dev]
+# opt-level = 3
+
+[profile.dev.package."*"]
+# opt-level = 3
+

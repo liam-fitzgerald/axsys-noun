@@ -6,6 +6,10 @@ use std::{
     str::{self, Utf8Error},
 };
 
+use ibig::UBig;
+
+use crate::sept::Aura;
+
 /// Returns the length in bits of a sequence of bytes.
 fn bit_len(bytes: &[u8]) -> usize {
     if let Some(last_byte) = bytes.last() {
@@ -86,13 +90,13 @@ impl Default for Builder {
 /// To create a new atom, use one of the `From<T>` implementations:
 ///
 /// ```
-/// # use noun::atom::Atom;
+/// # use axsys_noun::atom::Atom;
 /// let atom = Atom::from("hello");
 /// assert_eq!(atom, "hello");
 /// ```
 ///
 /// ```
-/// # use noun::atom::Atom;
+/// # use axsys_noun::atom::Atom;
 /// let atom = Atom::from(0u8);
 /// assert_eq!(atom, 0u8);
 /// ```
@@ -117,6 +121,12 @@ macro_rules! atom_as_uint {
             None
         }
     }};
+}
+
+#[derive(Debug)]
+pub enum ParseError {
+    Invalid,
+    Utf8(Utf8Error),
 }
 
 impl Atom {
@@ -168,7 +178,7 @@ impl Atom {
     ///
     /// # Examples
     /// ```
-    /// # use noun::atom::Atom;
+    /// # use axsys_noun::atom::Atom;
     /// let uint = u8::MAX;
     /// let atom = Atom::from(uint);
     /// assert_eq!(atom.as_u8().unwrap(), uint);
@@ -182,7 +192,7 @@ impl Atom {
     ///
     /// # Examples
     /// ```
-    /// # use noun::atom::Atom;
+    /// # use axsys_noun::atom::Atom;
     /// let uint = u16::MAX;
     /// let atom = Atom::from(uint);
     /// assert_eq!(atom.as_u16().unwrap(), uint);
@@ -196,7 +206,7 @@ impl Atom {
     ///
     /// # Examples
     /// ```
-    /// # use noun::atom::Atom;
+    /// # use axsys_noun::atom::Atom;
     /// let uint = u32::MAX;
     /// let atom = Atom::from(uint);
     /// assert_eq!(atom.as_u32().unwrap(), uint);
@@ -210,7 +220,7 @@ impl Atom {
     ///
     /// # Examples
     /// ```
-    /// # use noun::atom::Atom;
+    /// # use axsys_noun::atom::Atom;
     /// let uint = u64::MAX;
     /// let atom = Atom::from(uint);
     /// assert_eq!(atom.as_u64().unwrap(), uint);
@@ -224,7 +234,7 @@ impl Atom {
     ///
     /// # Examples
     /// ```
-    /// # use noun::atom::Atom;
+    /// # use axsys_noun::atom::Atom;
     /// let uint = u128::MAX;
     /// let atom = Atom::from(uint);
     /// assert_eq!(atom.as_u128().unwrap(), uint);
@@ -238,7 +248,7 @@ impl Atom {
     ///
     /// # Examples
     /// ```
-    /// # use noun::atom::Atom;
+    /// # use axsys_noun::atom::Atom;
     /// let uint = usize::MAX;
     /// let atom = Atom::from(uint);
     /// assert_eq!(atom.as_usize().unwrap(), uint);
@@ -265,6 +275,79 @@ impl Atom {
             atom: self,
             bit_idx: 0,
             bit_mask: 0b1,
+        }
+    }
+
+    /// Returns the atom as a big integer
+    pub fn as_big(&self) -> UBig {
+        UBig::from_le_bytes(&self.bytes)
+    }
+
+    fn format_decimal(&self) -> String {
+        let big = self.as_big();
+        let s = big.to_string();
+        let mut chs = s.chars().rev().collect::<Vec<char>>();
+        let len = chs.len();
+        let gap = len % 3;
+        if gap != 0 {
+            chs.resize(len + (3 - gap), ' ');
+        }
+        let mut res: Vec<String> = vec![];
+        for chunk in chs.chunks_exact(3) {
+            let bloq = chunk.iter().rev().collect::<String>();
+            res.push(bloq);
+        }
+        res.reverse();
+        res.join(".").trim().to_string()
+    }
+
+    /// Formats an atom into a string using the given aura
+    ///
+    /// # Examples
+    /// ```
+    /// # use axsys_noun::atom::Atom;
+    /// # use axsys_noun::sept::Aura;
+    /// let atom = Atom::from(123434910u64);
+    /// let s = atom.format_aura(Aura::U).unwrap();
+    /// assert_eq!(s, "123.434.910");
+    /// ```
+    pub fn format_aura(&self, aura: Aura) -> Result<String, Utf8Error> {
+        match aura {
+            Aura::T => self.as_str().map(|s| s.to_string()),
+            // TODO: sanity checks
+            Aura::Ta => self.as_str().map(|s| s.to_string()),
+            Aura::Tas => self.as_str().map(|s| s.to_string()),
+
+            Aura::U => Ok(self.format_decimal()),
+            Aura::Ud => Ok(self.format_decimal()),
+            Aura::Ux => unimplemented!(),
+            Aura::Uv => unimplemented!(),
+            Aura::Uw => unimplemented!(),
+            Aura::Da => unimplemented!(),
+            Aura::Dr => unimplemented!(),
+        }
+    }
+
+    fn parse_decimal(s: &str) -> Result<Self, ParseError> {
+        let bloqs = s.split('.').collect::<Vec<&str>>().join("");
+        let big = UBig::from_str_radix(&bloqs, 10).map_err(|_| ParseError::Invalid)?;
+        Ok(Atom::from(big.to_le_bytes()))
+    }
+
+    /// Parses a string into an atom using the given aura
+    ///
+    /// # Examples
+    /// ```
+    /// # use axsys_noun::atom::Atom;
+    /// # use axsys_noun::sept::Aura;
+    /// let atom = Atom::parse_aura(Aura::U, "123.434.910").unwrap();
+    /// assert_eq!(atom, Atom::from(123434910u64));
+    /// ```
+    pub fn parse_aura(aura: Aura, s: &str) -> Result<Self, ParseError> {
+        match aura {
+            Aura::T | Aura::Ta | Aura::Tas => Ok(Atom::from(s)),
+            Aura::U | Aura::Ud => Self::parse_decimal(s),
+            _ => unimplemented!(),
         }
     }
 }
@@ -563,5 +646,21 @@ mod tests {
             uint_ne_test!(881_944_000_887u64, 21_601_185_860_100_176_183u128);
             uint_ne_test!(64_222u16, 127usize);
         }
+    }
+
+    #[test]
+    fn format_aura() {
+        let atom = Atom::from(123434910u64);
+        let aura = Aura::U;
+        let s = atom.format_aura(aura).unwrap();
+        assert_eq!(s, "123.434.910");
+        let atom = Atom::from(1234u64);
+        let aura = Aura::Ud;
+        let s = atom.format_aura(aura).unwrap();
+        assert_eq!(s, "1.234");
+        let atom = Atom::from(1234u64);
+        let aura = Aura::Ud;
+        let s = atom.format_aura(aura).unwrap();
+        assert_eq!(s, "1.234");
     }
 }
