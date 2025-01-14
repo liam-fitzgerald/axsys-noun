@@ -6,7 +6,7 @@ use std::{
     mem::MaybeUninit,
 };
 
-mod axes {
+pub mod axes {
     pub fn cap(axis: usize) -> usize {
         match axis {
             0 => panic!("axis 0 is invalid"),

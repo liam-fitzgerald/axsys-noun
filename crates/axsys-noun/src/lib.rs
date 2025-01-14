@@ -21,6 +21,10 @@ pub mod marker;
 pub mod noun;
 pub mod serdes;
 
+#[doc(hidden)]
+#[cfg(feature = "hoon")]
+pub mod hoon;
+
 pub mod sept;
 
 #[doc(inline)]
