@@ -60,8 +60,6 @@ impl Noun {
     }
 }
 
-
-
 impl Cue for Noun {
     fn cue(jammed_noun: Atom) -> serdes::Result<Self> {
         fn decode_atom(bits: &mut AtomIter) -> serdes::Result<Atom> {

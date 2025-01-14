@@ -302,7 +302,7 @@ impl Atom {
     }
 
     /// Formats an atom into a string using the given aura
-    /// 
+    ///
     /// # Examples
     /// ```
     /// # use axsys_noun::atom::Atom;
@@ -325,7 +325,6 @@ impl Atom {
             Aura::Uw => unimplemented!(),
             Aura::Da => unimplemented!(),
             Aura::Dr => unimplemented!(),
-
         }
     }
 
@@ -336,7 +335,7 @@ impl Atom {
     }
 
     /// Parses a string into an atom using the given aura
-    /// 
+    ///
     /// # Examples
     /// ```
     /// # use axsys_noun::atom::Atom;
@@ -352,7 +351,6 @@ impl Atom {
         }
     }
 }
-
 
 impl Display for Atom {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), Error> {

@@ -3,7 +3,7 @@
 pub enum Aura {
     /// A utf-8 string
     T,
-    /// A utf-8 string 
+    /// A utf-8 string
     Ta,
     /// A utf-8 string composed of alphanumeric characters and hyphens
     Tas,
@@ -20,5 +20,5 @@ pub enum Aura {
     /// Urbit date
     Da,
     /// Urbit time interval
-    Dr
+    Dr,
 }
