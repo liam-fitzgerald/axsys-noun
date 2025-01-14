@@ -37,7 +37,7 @@ mod axes {
             3 => 2 * a + 1,
             _ => {
                 let recur = peg(a, b / 2);
-                return (b % 2) + (recur * 2);
+                (b % 2) + (recur * 2)
             }
         }
     }
