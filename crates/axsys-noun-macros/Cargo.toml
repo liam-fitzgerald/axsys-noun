@@ -12,5 +12,5 @@ repository = "https://github.com/liam-fitzgerald/axsys-noun"
 proc-macro = true
 
 [dependencies]
-axsys-noun = { path = "../axsys-noun" }
+axsys-noun = { version = "0.1.0", features = ["hoon"] }
 proc-macro2 = "1.0.93"

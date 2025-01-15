@@ -29,10 +29,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "axsys-noun"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6d5e570e4f049baeb1e6cdb5f1d32aaaf037d43bcb652166653e0d48928d419"
+dependencies = [
+ "ibig",
+ "nom",
+ "nom-supreme",
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "syn",
+ "urbit-ob",
+]
+
+[[package]]
 name = "axsys-noun-macros"
 version = "0.1.0"
 dependencies = [
- "axsys-noun",
+ "axsys-noun 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2",
 ]
 
