@@ -4,16 +4,10 @@ use std::collections::HashMap;
 use crate::cell::axes::peg;
 use crate::Atom;
 use nom::{
-    branch::alt,
     bytes::complete::tag,
-    character::complete::{alpha0, alpha1, alphanumeric1, char},
-    combinator::{map, recognize},
-    multi::{many0, many1, separated_list1},
-    sequence::{delimited, tuple},
-    Err, IResult,
+    combinator::map, IResult,
 };
-use nom_supreme::error::{BaseErrorKind, ErrorTree, Expectation, StackContext};
-use nom_supreme::parser_ext::ParserExt;
+use nom_supreme::error::ErrorTree;
 use proc_macro2::TokenStream;
 use quote::quote;
 
@@ -62,20 +56,20 @@ pub enum HoonType {
 }
 
 mod parse {
-    use std::arch::global_asm;
-    use std::sync::Arc;
+    
+    
 
     use super::*;
     use nom::branch::alt as pose;
     use nom::bytes::complete::{is_not, tag as jest};
-    use nom::character::complete::{alpha0, multispace0, multispace1, satisfy, space0};
+    use nom::character::complete::{multispace0, multispace1, satisfy};
     use nom::character::complete::{char, newline};
     use nom::character::{is_alphabetic, is_alphanumeric};
     use nom::combinator::map as cook;
-    use nom::combinator::{map_opt as sear, recognize};
-    use nom::error::{dbg_dmp, ParseError};
+    use nom::combinator::recognize;
+    use nom::error::ParseError;
     use nom::multi::{
-        many0 as star, many1 as plus, separated_list0 as more, separated_list1 as most,
+        many0 as star, many1 as plus, separated_list1 as most,
     };
     use nom::sequence::{delimited as ifix, tuple as plug};
     use nom::{sequence::Tuple, Parser};
@@ -177,7 +171,7 @@ mod parse {
         char('@')
     }
 
-    fn tis<'a>(input: &'a str) -> IRes<&'a str, char> {
+    fn tis(input: &str) -> IRes<&str, char> {
         char('=').parse(input)
     }
 
@@ -197,7 +191,7 @@ mod parse {
         }
     }
 
-    pub fn term<'a>(input: &'a str) -> IRes<&'a str, String> {
+    pub fn term(input: &str) -> IRes<&str, String> {
         cook(recognize(plug((alf(), star(aln())))), |s| {
             let t = s.to_string();
             println!("parsed term {:#?} {:#?}", t, s);
@@ -218,7 +212,7 @@ mod parse {
         dbg_dmp_str(face_inner(), "Parsing face")
     }
 
-    pub fn aura_inner<'a>(input: &'a str) -> IRes<&'a str, Box<HoonType>> {
+    pub fn aura_inner(input: &str) -> IRes<&str, Box<HoonType>> {
         let (i, _) = pat().parse(input)?;
         let (i, term) = term.parse(i).unwrap_or_else(|e| (i, "".to_string()));
 
@@ -230,17 +224,17 @@ mod parse {
             })),
         ))
     }
-    pub fn aura<'a>(input: &'a str) -> IRes<&'a str, Box<HoonType>> {
+    pub fn aura(input: &str) -> IRes<&str, Box<HoonType>> {
         aura_inner(input)
     }
 
-    pub fn like<'a>(input: &'a str) -> IRes<&'a str, Box<HoonType>> {
+    pub fn like(input: &str) -> IRes<&str, Box<HoonType>> {
         let (input, term) = term.parse(input)?;
         Ok((input, Box::new(HoonType::Like(LikeType { like: term }))))
     }
 
-    fn tuple_inner<'a>(input: &'a str) -> IRes<&'a str, Box<HoonType>> {
-        let (next, inner) = ifix(sel(), is_not("]"), ser())(&input)?;
+    fn tuple_inner(input: &str) -> IRes<&str, Box<HoonType>> {
+        let (next, inner) = ifix(sel(), is_not("]"), ser())(input)?;
         println!("parsed tuple inner {:#?} {:#?}", inner, input);
         let a = ace();
         let (_empty, types) = most(a, wide)(inner)?;
@@ -248,7 +242,7 @@ mod parse {
         Ok((
             next,
             Box::new(HoonType::Tuple(TupleType {
-                tuple: types.into_iter().map(|t| t.into()).collect(),
+                tuple: types.into_iter().collect(),
             })),
         ))
     }
@@ -260,18 +254,18 @@ mod parse {
     pub fn list<'a>() -> impl Parser<&'a str, Box<HoonType>, ErrorTree<&'a str>> {
         cook(
             ifix(jest("(list "), wide, char(')')).context("Parsing list"),
-            |v| Box::new(HoonType::List(ListType { list: v.into() })),
+            |v| Box::new(HoonType::List(ListType { list: v })),
         )
     }
 
-    pub fn wide<'a>(input: &'a str) -> IRes<&'a str, Box<HoonType>> {
-        let mut rule = pose((tuple(), face(), list(), aura, like)).context("Parsing wide");
+    pub fn wide(input: &str) -> IRes<&str, Box<HoonType>> {
+        let rule = pose((tuple(), face(), list(), aura, like)).context("Parsing wide");
         let mut rule = dbg_dmp_str(rule, "Parsing wide");
         rule.parse(input)
     }
 
-    pub fn arm<'a>(input: &'a str) -> IRes<&'a str, (String, Box<HoonType>)> {
-        let mut rule = plug((ifix(plug((jest("++"), white())), term, white()), wide));
+    pub fn arm(input: &str) -> IRes<&str, (String, Box<HoonType>)> {
+        let rule = plug((ifix(plug((jest("++"), white())), term, white()), wide));
         let mut rule = dbg_dmp_str(rule, "Parsing arm");
         rule.parse(input)
     }
@@ -282,7 +276,7 @@ mod parse {
     pub fn white<'a>() -> impl Parser<&'a str, (), ErrorTree<&'a str>> {
         cold(plus(gap()), ())
     }
-    pub fn ret<'a>(input: &'a str) -> IRes<&'a str, ()> {
+    pub fn ret(input: &str) -> IRes<&str, ()> {
         cold(newline, ()).parse(input)
     }
 
@@ -290,15 +284,10 @@ mod parse {
         let (i, _) = multispace0(input)?;
         let (i, _) = tag("|%")(i)?;
         let (i, _) = multispace1(i)?;
-        println!("parsed core {:#?}", i);
         let (i, arms) = most(multispace1, arm)(i)?;
-        println!("parsed arms {:#?}, rest: {:#?}", arms, i);
         let (i, _) = multispace0(i)?;
-        println!("parsed rest {:#?}", i);
         let (i, _) = tag("--")(i)?;
-        println!("parsed rest {:#?}", i);
         let (i, _) = multispace0(i)?;
-        println!("parsed last {:#?}", i);
         Ok((
             i,
             Box::new(HoonType::Core(CoreType {
@@ -518,7 +507,7 @@ pub fn axis_for_list_idx(idx: usize) -> usize {
 
 pub fn tuple_idx_for_axis(idx: usize, len: usize) -> usize {
     if idx == 0 {
-        return 2;
+        2
     } else if idx == (len - 1) {
         return axis_for_list_idx(idx - 1) + 1;
     } else {
@@ -533,7 +522,7 @@ pub struct AxisInfo<'a> {
     pub ty: &'a HoonType,
 }
 
-pub fn get_axes<'a>(ty: &'a HoonType) -> Vec<AxisInfo<'a>> {
+pub fn get_axes(ty: &HoonType) -> Vec<AxisInfo<'_>> {
     let cur_axis = 1;
     let mut next = vec![(ty, cur_axis)];
     let mut axes: Vec<AxisInfo> = vec![];
@@ -550,7 +539,7 @@ pub fn get_axes<'a>(ty: &'a HoonType) -> Vec<AxisInfo<'a>> {
                 axes.push(AxisInfo {
                     face: Some(f.face.clone()),
                     axis: ax,
-                    ty: &f.ty.as_ref(),
+                    ty: f.ty.as_ref(),
                 });
             }
             HoonType::Tuple(ref t) => {
@@ -650,7 +639,7 @@ pub fn define_type(input: String) -> TokenStream {
     let mut result = TokenStream::new();
 
     for (face, ty) in &arms {
-        let axes = get_axes(&ty);
+        let axes = get_axes(ty);
         let fields = axes.iter().map(|axis| {
             // Convert the field name string to an ident
             let field_name = syn::Ident::new(
@@ -658,7 +647,8 @@ pub fn define_type(input: String) -> TokenStream {
                 proc_macro2::Span::call_site(),
             );
 
-            let field_type = match axis.ty {
+            
+            match axis.ty {
                 HoonType::Atom(ref a) => {
                     if a.aura.is_empty() {
                         quote! { pub #field_name: Atom }
@@ -668,8 +658,7 @@ pub fn define_type(input: String) -> TokenStream {
                     }
                 }
                 _ => quote! { pub #field_name: Noun }, // TODO: handle other types
-            };
-            field_type
+            }
         });
 
         // Convert the type name string to an ident
@@ -707,18 +696,18 @@ pub fn define_type(input: String) -> TokenStream {
         result.extend(expanded);
     }
 
-    result.into()
+    result
 }
 
 pub fn sloe(ty: &HoonType) -> Vec<(String, usize)> {
-    let res = traverse::<Vec<(String, usize)>>(ty, |(t, a, r)| {
+    
+    traverse::<Vec<(String, usize)>>(ty, |(t, a, r)| {
         if let HoonType::Face(ref f) = t {
             r.push((f.face.clone(), a));
             return true;
         }
-        return false;
-    });
-    res
+        false
+    })
 }
 
 #[cfg(test)]
@@ -769,10 +758,9 @@ mod tests {
             }
         };
 
-        
         let expanded_str = prettyplease::unparse(&syn::parse2(expanded.clone()).unwrap());
         let expected_str = prettyplease::unparse(&syn::parse2(expected).unwrap());
-        
+
         assert_eq!(expanded_str, expected_str);
     }
 }

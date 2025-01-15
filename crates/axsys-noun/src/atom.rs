@@ -8,7 +8,7 @@ use std::{
 
 use ibig::UBig;
 
-use crate::sept::Aura;
+use crate::sept::{date, Aura, FormatError, ParseError};
 
 /// Returns the length in bits of a sequence of bytes.
 fn bit_len(bytes: &[u8]) -> usize {
@@ -121,12 +121,6 @@ macro_rules! atom_as_uint {
             None
         }
     }};
-}
-
-#[derive(Debug)]
-pub enum ParseError {
-    Invalid,
-    Utf8(Utf8Error),
 }
 
 impl Atom {
@@ -311,19 +305,31 @@ impl Atom {
     /// let s = atom.format_aura(Aura::U).unwrap();
     /// assert_eq!(s, "123.434.910");
     /// ```
-    pub fn format_aura(&self, aura: Aura) -> Result<String, Utf8Error> {
+    pub fn format_aura(&self, aura: Aura) -> Result<String, FormatError> {
         match aura {
-            Aura::T => self.as_str().map(|s| s.to_string()),
+            Aura::T => self
+                .as_str()
+                .map(|s| s.to_string())
+                .map_err(FormatError::Utf8),
             // TODO: sanity checks
-            Aura::Ta => self.as_str().map(|s| s.to_string()),
-            Aura::Tas => self.as_str().map(|s| s.to_string()),
+            Aura::Ta => self
+                .as_str()
+                .map(|s| s.to_string())
+                .map_err(FormatError::Utf8),
+            Aura::Tas => self
+                .as_str()
+                .map(|s| s.to_string())
+                .map_err(FormatError::Utf8),
 
             Aura::U => Ok(self.format_decimal()),
             Aura::Ud => Ok(self.format_decimal()),
             Aura::Ux => unimplemented!(),
             Aura::Uv => unimplemented!(),
             Aura::Uw => unimplemented!(),
-            Aura::Da => unimplemented!(),
+            Aura::Da => self
+                .as_u128()
+                .map(date::format_da)
+                .ok_or(FormatError::TooLarge),
             Aura::Dr => unimplemented!(),
         }
     }
@@ -347,6 +353,10 @@ impl Atom {
         match aura {
             Aura::T | Aura::Ta | Aura::Tas => Ok(Atom::from(s)),
             Aura::U | Aura::Ud => Self::parse_decimal(s),
+            Aura::Da => Ok(Self::from(
+                date::parse_da(s).map_err(|_e| ParseError::Invalid)?,
+            )),
+
             _ => unimplemented!(),
         }
     }
