@@ -5,6 +5,9 @@ edition = "2021"
 authors = ["Peter McEvoy <peter@tlon.io>", "Liam Fitzgerald <liam@axiomatic.systems>"]
 description = "A library for working with Noun data"
 keywords = ["noun", "axsys", "Urbit"]
+license = "MIT"
+repository = "https://github.com/liam-fitzgerald/axsys-noun"
+
 [features]
 default = ["hoon"]
 thread-safe = []
