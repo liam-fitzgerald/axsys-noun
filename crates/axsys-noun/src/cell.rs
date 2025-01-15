@@ -200,6 +200,10 @@ impl Cell {
         Noun::Cell(self.clone())
     }
 
+    pub fn into_noun(self) -> Noun {
+        Noun::Cell(self)
+    }
+
     pub fn in_rc(&self) -> Rc<Noun> {
         Rc::new(self.as_noun())
     }

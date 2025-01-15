@@ -8,7 +8,7 @@ use std::{
 
 use ibig::UBig;
 
-use crate::sept::{date, Aura, FormatError, ParseError};
+use crate::{sept::{date, Aura, FormatError, ParseError}, Noun};
 
 /// Returns the length in bits of a sequence of bytes.
 fn bit_len(bytes: &[u8]) -> usize {
@@ -261,6 +261,14 @@ impl Atom {
     /// This method does not allocate on the heap.
     pub fn into_vec(self) -> Vec<u8> {
         self.bytes
+    }
+
+    pub fn as_noun(&self) -> Noun {
+        Noun::Atom(self.clone())
+    }
+
+    pub fn into_noun(self) -> Noun {
+        Noun::Atom(self)
     }
 
     /// Returns a bitwise iterator over this atom.
