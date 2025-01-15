@@ -1,0 +1,14 @@
+[package]
+name = "axsys-noun-macros"
+version = "0.1.0"
+edition = "2021"
+authors = ["Liam Fitzgerald <liam@axiomatic.systems>"]
+description = "A library for working with Noun data"
+keywords = ["noun", "axsys", "Urbit"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+axsys-noun = { path = "../axsys-noun" }
+proc-macro2 = "1.0.93"

@@ -1,7 +1,6 @@
 //! Ported standard library functions for working with Noun data
 use std::str::Utf8Error;
 
-
 #[derive(Debug)]
 pub enum ParseError {
     Invalid,

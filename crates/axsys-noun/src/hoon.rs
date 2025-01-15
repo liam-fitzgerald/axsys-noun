@@ -3,10 +3,7 @@ use std::collections::HashMap;
 
 use crate::cell::axes::peg;
 use crate::Atom;
-use nom::{
-    bytes::complete::tag,
-    combinator::map, IResult,
-};
+use nom::{bytes::complete::tag, combinator::map, IResult};
 use nom_supreme::error::ErrorTree;
 use proc_macro2::TokenStream;
 use quote::quote;
@@ -56,21 +53,17 @@ pub enum HoonType {
 }
 
 mod parse {
-    
-    
 
     use super::*;
     use nom::branch::alt as pose;
     use nom::bytes::complete::{is_not, tag as jest};
-    use nom::character::complete::{multispace0, multispace1, satisfy};
     use nom::character::complete::{char, newline};
+    use nom::character::complete::{multispace0, multispace1, satisfy};
     use nom::character::{is_alphabetic, is_alphanumeric};
     use nom::combinator::map as cook;
     use nom::combinator::recognize;
     use nom::error::ParseError;
-    use nom::multi::{
-        many0 as star, many1 as plus, separated_list1 as most,
-    };
+    use nom::multi::{many0 as star, many1 as plus, separated_list1 as most};
     use nom::sequence::{delimited as ifix, tuple as plug};
     use nom::{sequence::Tuple, Parser};
     use nom_supreme::error::ErrorTree;
@@ -87,11 +80,11 @@ mod parse {
     {
         move |i: &'a str| match f.parse(i) {
             Err(e) => {
-                println!("{:#?}: Error({:#?}) at:\n{:#?}", context, e, i);
+                // println!("{:#?}: Error({:#?}) at:\n{:#?}", context, e, i);
                 Err(e)
             }
             Ok((i, o)) => {
-                println!("{:#?}: Ok({:#?}) at:\n{:#?}", context, o, i);
+                // println!("{:#?}: Ok({:#?}) at:\n{:#?}", context, o, i);
                 Ok((i, o))
             }
         }
@@ -619,7 +612,8 @@ pub fn sanitize_type(input: String) -> String {
     result
 }
 
-pub fn define_type(input: String) -> TokenStream {
+pub fn define_type(input: TokenStream) -> TokenStream {
+    let input = syn::parse2::<syn::LitStr>(input).unwrap().value();
     let res = parse::core(&input);
     if res.is_err() {
         println!("{:#?}", res.unwrap_err());
@@ -647,7 +641,6 @@ pub fn define_type(input: String) -> TokenStream {
                 proc_macro2::Span::call_site(),
             );
 
-            
             match axis.ty {
                 HoonType::Atom(ref a) => {
                     if a.aura.is_empty() {
@@ -700,7 +693,6 @@ pub fn define_type(input: String) -> TokenStream {
 }
 
 pub fn sloe(ty: &HoonType) -> Vec<(String, usize)> {
-    
     traverse::<Vec<(String, usize)>>(ty, |(t, a, r)| {
         if let HoonType::Face(ref f) = t {
             r.push((f.face.clone(), a));
@@ -716,13 +708,13 @@ mod tests {
 
     #[test]
     fn test_define_type() {
-        let s = r#"
+        let s = quote! {r#"
 |%
 ++  foo  [one=@ two=@ux]
 ++  bar  [three=@ four=@]
 --
-"#;
-        let expanded = define_type(String::from(s));
+"#};
+        let expanded = define_type(s);
         println!("{}", expanded);
         let expected = quote! {
             #[derive(Debug)]

@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
   "crates/axsys-noun",
+  "crates/axsys-noun-macros",
 ]
 
 
