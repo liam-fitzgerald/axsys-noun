@@ -51,6 +51,22 @@ impl Noun {
         }
     }
 
+    pub fn into_atom(self) -> Option<Atom> {
+        if let Noun::Atom(atom) = self {
+            Some(atom)
+        } else {
+            None
+        }
+    }
+
+    pub fn into_cell(self) -> Option<Cell> {
+        if let Noun::Cell(cell) = self {
+            Some(cell)
+        } else {
+            None
+        }
+    }
+
     pub fn as_atom(&self) -> Option<&Atom> {
         if let Noun::Atom(atom) = self {
             Some(atom)
